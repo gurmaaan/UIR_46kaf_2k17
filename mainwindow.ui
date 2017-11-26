@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1188</width>
+    <height>666</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <layout class="QGridLayout" name="gridLayout"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1188</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionLoad_file"/>
+   </widget>
+   <widget class="QMenu" name="menuSelect_objects">
+    <property name="title">
+     <string>Service</string>
+    </property>
+    <addaction name="actionStart_algo"/>
+    <addaction name="separator"/>
+    <addaction name="actionColor_of_objects"/>
+    <addaction name="actionColorize_all"/>
+   </widget>
+   <widget class="QMenu" name="menuAutor">
+    <property name="title">
+     <string>Autor</string>
+    </property>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuSelect_objects"/>
+   <addaction name="menuAutor"/>
+  </widget>
+  <widget class="QToolBar" name="mainToolBar">
+   <attribute name="toolBarArea">
+    <enum>LeftToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="separator"/>
+   <addaction name="action1"/>
+   <addaction name="action2"/>
+   <addaction name="action3"/>
+   <addaction name="action4"/>
+   <addaction name="action5"/>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <action name="action1">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/res/plus.png</normaloff>:/res/plus.png</iconset>
+   </property>
+   <property name="text">
+    <string>1</string>
+   </property>
+   <property name="toolTip">
+    <string>Zoom in</string>
+   </property>
+  </action>
+  <action name="action2">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/res/minus.png</normaloff>:/res/minus.png</iconset>
+   </property>
+   <property name="text">
+    <string>2</string>
+   </property>
+   <property name="toolTip">
+    <string>Zoom out</string>
+   </property>
+  </action>
+  <action name="action3">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/res/draw.png</normaloff>:/res/draw.png</iconset>
+   </property>
+   <property name="text">
+    <string>3</string>
+   </property>
+   <property name="toolTip">
+    <string>draw tool</string>
+   </property>
+  </action>
+  <action name="action4">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/res/erase.png</normaloff>:/res/erase.png</iconset>
+   </property>
+   <property name="text">
+    <string>4</string>
+   </property>
+   <property name="toolTip">
+    <string>erase tool</string>
+   </property>
+  </action>
+  <action name="action5">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/res/Programming-Save-icon.png</normaloff>:/res/Programming-Save-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>5</string>
+   </property>
+   <property name="toolTip">
+    <string>Save data</string>
+   </property>
+  </action>
+  <action name="actionLoad_file">
+   <property name="text">
+    <string>Load file</string>
+   </property>
+  </action>
+  <action name="actionStart_algo">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/res/Start-2-icon.png</normaloff>:/res/Start-2-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Start algo</string>
+   </property>
+  </action>
+  <action name="actionColor_of_objects">
+   <property name="text">
+    <string>Color of objects</string>
+   </property>
+  </action>
+  <action name="actionColorize_all">
+   <property name="text">
+    <string>Colorize all </string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources>
+  <include location="resource.qrc"/>
+ </resources>
+ <connections/>
+</ui>
