@@ -50,8 +50,13 @@ private slots:
 
 private:
   bool on_img(int,int);
+  bool dataIsReady();
+  QPoint transform(QPoint);
+  QPoint drawCurve_andGetCenter(QImage& img); //return centerMass of curve
   char cursor_mode; //0 - view(nothing), 1 - draw, 2 - erase
   bool drawingFlag;
+  void ShowObjectUnderCursor(QMouseEvent*);
+  bool decide_to_draw(QPoint p);
 
   QColor ColorObj;
 

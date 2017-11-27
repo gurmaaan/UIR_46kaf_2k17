@@ -85,20 +85,15 @@ MGraphics::MGraphics(): cursor_mode(0),drawingFlag(false),ColorObj(qRgb(0, 145, 
 
 void MGraphics::setCursor_mode(char mode)
 {
-    QCursor cur1(draw_pix,0,draw_pix.height());
-    QCursor cur2(erase_pix,0,erase_pix.height());
-
     switch (mode) {
     case 0:
         this->setCursor(Qt::ArrowCursor);
         break;
     case 1:
-        this->setCursor(cur1);
+        this->setCursor(QCursor(draw_pix,0,draw_pix.height()));
         break;
     case 2:
-        this->setCursor(cur2);
-        break;
-    default:
+        this->setCursor(QCursor(erase_pix,0,erase_pix.height()));
         break;
     }
     cursor_mode = mode;
@@ -127,6 +122,26 @@ void MGraphics::OSlider_Change(int value)//FINAL
     }
 }
 
+QImage threshold_img(const QImage& source_img, int threshold_value)
+{
+    int h = source_img.height();
+    int w = source_img.width();
+    QImage ret_img(w,h,source_img.format());
+
+    for (int i = 0;i < w; ++i)
+      for(int j = 0;j < h; ++j)
+      {
+         QRgb _P = source_img.pixel(i,j);
+         if (qRed(_P) + qGreen(_P) + qBlue(_P) >= threshold_value * 3)
+          {
+              ret_img.setPixel(i,j,BIN_WHITE);
+          }else{
+              ret_img.setPixel(i,j,BIN_BLACK);
+          }
+      }
+    return ret_img;
+}
+
 void MGraphics::Slider_Change(int value)//threshold - FINAL
 {// item in titem, threshold image in b_img
     if (pm.isNull()) return;
@@ -136,24 +151,8 @@ void MGraphics::Slider_Change(int value)//threshold - FINAL
 
     txt->setText("threshold level is " + QString::number(value));
 
-    QImage source_img = pm.toImage();
-
-    const int h = source_img.height();
-    const int w = source_img.width();
-
-    for (int i = 0;i < w; ++i)
-      for(int j = 0;j < h; ++j)
-      {
-         QRgb _P = source_img.pixel(i,j);
-         if (qRed(_P) + qGreen(_P) + qBlue(_P) >= value * 3)
-          {
-              source_img.setPixel(i,j,BIN_WHITE);
-          }else{
-              source_img.setPixel(i,j,BIN_BLACK);
-          }
-      }
-    b_img = source_img;
-    titem = std::make_unique<QGraphicsPixmapItem> (QPixmap::fromImage(std::move(source_img)));
+    b_img = threshold_img(pm.toImage(),value);
+    titem = std::make_unique<QGraphicsPixmapItem> (QPixmap::fromImage(b_img));
     scene.addItem(titem.get());
     update();
 }
@@ -176,18 +175,20 @@ QPoint EndPoint;
 QStack<QLineF> lines;
 QStack<QGraphicsLineItem*> line_items;
 
-void MGraphics::mouseMoveEvent(QMouseEvent *event)
-{//test
-    QPoint p = event->pos();
-    QPointF l = mapToScene(p.x(),p.y()); // coordinate transformation
-    int x = static_cast<int> (l.x());
-    int y = static_cast<int> (l.y());
-    p.setX(x); p.setY(y);
-    if (!on_img(x,y)){ return; }
-//highlight an object----------------------------------------------------------------------------------------------------
-    QToolTip::showText(event->globalPos(),QString("(" + QString::number((int) l.x()) +
-                                                  "," + QString::number((int) l.y()) + ")"));
-    if (!(data_01.empty()) && (data_01.size() == pm.height()) && cursor_mode != 2)
+inline bool MGraphics::dataIsReady()
+{
+   if (!data_01.empty() && !data_obj.empty() && data_01.size() == pm.height())
+       return true;
+   else
+       return false;
+}
+
+void MGraphics::ShowObjectUnderCursor(QMouseEvent *event)
+{
+    QPoint p = transform(event->pos());
+    int x = p.x();
+    int y = p.y();
+    if (dataIsReady() && cursor_mode != 2)
     {
         size_t id = data_01[y][x];
         if (id){
@@ -201,7 +202,23 @@ void MGraphics::mouseMoveEvent(QMouseEvent *event)
             update();
             QToolTip::showText(event->globalPos(),QString ("id = " + QString::number(data_01[y][x])));
         }
-    }  
+    }else QToolTip::showText(event->globalPos(),QString("(" + QString::number(x) +
+                                                        "," + QString::number(y) + ")"));
+}
+
+QPoint MGraphics::transform(QPoint pos)
+{
+    QPointF l = mapToScene(pos.x(),pos.y());
+    int x = static_cast<int> (l.x());
+    int y = static_cast<int> (l.y());
+    return QPoint(x,y);
+}
+
+void MGraphics::mouseMoveEvent(QMouseEvent *event)
+{
+    QPoint p = transform(event->pos());
+    if (!on_img(p.x(),p.y())){ return; }
+    ShowObjectUnderCursor(event);
 //----------------------------------------------------------------------------------------------------------------------
     if (drawingFlag && cursor_mode == 1)//draw
     {
@@ -219,53 +236,50 @@ void MGraphics::mouseMoveEvent(QMouseEvent *event)
     }
 }
 
-void MGraphics::mousePressEvent(QMouseEvent *event)
-{//test
-    QPoint p = event->pos();
-    QPointF l = mapToScene(p.x(),p.y()); // coordinate transformation
-    int x = static_cast<int> (l.x());
-    int y = static_cast<int> (l.y());
-    p.setX(x); p.setY(y);
-    if (!on_img(x,y) || data_01.empty() || data_01.size() != pm.height()) { return; }
-//----------------------------------------------------------------------------------------------------------------------
-    lines.clear();
-    line_items.clear();
-
+bool MGraphics::decide_to_draw(QPoint p)
+{
+    bool res;
     switch (cursor_mode) {
     case 1:
-        drawingFlag = data_01[y][x] > 0 ? true : false;
+        res = data_01[p.y()][p.x()] > 0 ? true : false;
         break;
     case 2:
-        drawingFlag = data_01[y][x] > 0 ? false : true;
+        res = data_01[p.y()][p.x()] > 0 ? false : true;
         break;
     default:
         drawingFlag = false;
         break;
     }
-    ID_onDraw = data_01[y][x];
-    StartPoint = QPoint(x,y);
+    return res;
+}
+
+void MGraphics::mousePressEvent(QMouseEvent *event)
+{
+    QPoint p = transform(event->pos());
+    if (!on_img(p.x(),p.y()) || !dataIsReady()) { return; }
+//----------------------------------------------------------------------------------------------------------------------
+    lines.clear();
+    line_items.clear();
+    drawingFlag = decide_to_draw(p);
 
     if (drawingFlag)
     {
-    //scene.addEllipse((qreal) p.x(),(qreal) p.y(),3,3,QPen(Qt::NoPen),QBrush(ColorObj));
-    prevPoint = p;
+        ID_onDraw = data_01[p.y()][p.x()];
+        StartPoint = prevPoint = p;
     }
 }
 
 void drawLineOnQImage(QImage& img,QPointF p1,QPointF p2, const uint color)
 {
     QVector2D n(p2 - p1);
-   // int len = (int) n.length();
     int len = static_cast<int> (n.length());
     n.normalize();
-    QVector2D v1(p1);
-    QVector2D v2(p2);
-
+    QVector2D v(p1);
     while (len--)
     {
-        v1 += n;
-        int x = v1.toPoint().x();
-        int y = v1.toPoint().y();
+        v += n;
+        int x = v.toPoint().x();
+        int y = v.toPoint().y();
         img.setPixel(x,y,color);
         img.setPixel(x+1,y, color);
         img.setPixel(x-1,y, color);
@@ -315,62 +329,47 @@ void fill_area(QImage& img, QPoint Start_point)
   }
 }
 
-void fill_erase_area(QImage& img, QPoint begin, QPoint end, QPoint Start_point)
+QPoint getStartPoint(const QImage& img, QPoint CenterMass)
 {
-    drawLineOnQImage(img,begin,end,1);
-    QStack<QPoint> depth;
-    depth.push(Start_point);
-    const int w = img.width();
-    const int h = img.height();
-
-    while (!depth.empty())
-    {
-      QPoint t = depth.top();
-      depth.pop();
-      int x = t.x();
-      int y = t.y();
-      img.setPixel(t,BIN_WHITE);
-
-      if((x + 1 < w)&&(!isBlack(x+1,y,img)))
-      {
-          depth.push(QPoint(x+1,y));
-      }
-      if((x - 1> -1)&&(!isBlack(x-1,y,img)))
-      {
-          depth.push(QPoint(x-1,y));
-      }
-      if((y + 1< h)&&(!isBlack(x,y+1,img)))
-      {
-          depth.push(QPoint(x,y+1));
-      }
-      if((y - 1> -1)&&(!isBlack(x,y-1,img)))
-      {
-          depth.push(QPoint(x,y-1));
-      }
-    }
+   return CenterMass;
 }
 
-QPoint getStartPoint(const QImage& img, QPoint p)
+QPoint MGraphics::drawCurve_andGetCenter(QImage& img)
 {
-   return p;
+    int N = 0;
+    qreal avgX = 0.0;
+    qreal avgY = 0.0;
+    while (!line_items.empty())//size line_items == size lines
+    {
+        //reWrite bin image
+        drawLineOnQImage(img,lines.top().p1(),lines.top().p2(),
+                         cursor_mode == 1 ? BIN_BLACK : BIN_WHITE);
+        avgX += lines.top().p1().x();
+        avgY += lines.top().p1().y();
+        //remove temp lines from scene
+       scene.removeItem(line_items.top());
+       lines.pop(); line_items.pop();
+       ++N;
+    }
+    N = N > 0 ? N : 1;
+    avgX /= N;
+    avgY /= N;
+   return QPoint(static_cast<int>(avgX),static_cast<int>(avgY));
 }
 
 void MGraphics::mouseReleaseEvent(QMouseEvent *event)
-{//test
+{
     drawingFlag = false;
-    QPoint p = event->pos();
-    QPointF l = mapToScene(p.x(),p.y()); // coordinate transformation
-    int x = static_cast<int> (l.x());
-    int y = static_cast<int> (l.y());
-    p.setX(x); p.setY(y);
+    QPoint p = transform(event->pos());
+    int x = p.x(); int y = p.y();
+
     EndPoint = p;
-    if (!on_img(x,y) || data_01.empty() || data_01.size() != pm.height()) {
+    if (!on_img(x,y) || !dataIsReady()) {
         while (!line_items.empty())
         {
           scene.removeItem(line_items.top());
           line_items.pop();
         }
-
         return;
     }
     if (cursor_mode == 1 && ID_onDraw != data_01[y][x])
@@ -389,28 +388,11 @@ void MGraphics::mouseReleaseEvent(QMouseEvent *event)
 //----------------------------------------------------------------------------------------------------------------------
     QImage red(b_img);
     Ctrl_Z.push(red);//push before drawing
-    int N = 0;
-    qreal avgX = 0.0;
-    qreal avgY = 0.0;
-    while (!line_items.empty())//size line_items == size lines
-    {
-        //reWrite bin image
-        drawLineOnQImage(red,lines.top().p1(),lines.top().p2(),
-                         cursor_mode == 1 ? BIN_BLACK : BIN_WHITE);
-        avgX += lines.top().p1().x();
-        avgY += lines.top().p1().y();
-        //remove temp lines from scene
-       scene.removeItem(line_items.top());
-       lines.pop(); line_items.pop();  
-       ++N;
-    }
-    N = N > 0 ? N : 1;
-    avgX /= N;
-    avgY /= N;
-    QPoint m(static_cast<int>(avgX),static_cast<int>(avgY));
+
+    QPoint centerMass = drawCurve_andGetCenter(red);
 
     if (cursor_mode == 1){
-    fill_area(red,getStartPoint(red,m));
+    fill_area(red,getStartPoint(red,centerMass));
     }
 
     b_img = red;
