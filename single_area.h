@@ -22,12 +22,6 @@ struct S_area
         return *this;
     }
 
-    ~S_area()
-    {
-        Points.clear();
-        CPoints.clear();
-    }
-
     void print()const
     {
         std::cout<<"id : "<<id<<" ";

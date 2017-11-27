@@ -42,7 +42,7 @@ MGraphics::~MGraphics()
 
 }
 
-MGraphics::MGraphics(): cursor_mode(0),drawingFlag(false),ColorObj(qRgb(0, 145, 218))
+MGraphics::MGraphics():thickness_pen(5), cursor_mode(0),drawingFlag(false),ColorObj(qRgb(0, 145, 218))
 {
     this->setAlignment(Qt::AlignCenter);
     this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -142,7 +142,7 @@ QImage threshold_img(const QImage& source_img, int threshold_value)
     return ret_img;
 }
 
-void MGraphics::Slider_Change(int value)//threshold - FINAL
+void MGraphics::Slider_Change(int value)//threshold
 {// item in titem, threshold image in b_img
     if (pm.isNull()) return;
 
@@ -198,9 +198,9 @@ void MGraphics::ShowObjectUnderCursor(QMouseEvent *event)
             scene.addItem(track_item.get());
             update();
             QToolTip::showText(event->globalPos(),QString ("id = " + QString::number(data_01[y][x])));
-        }
-    }else QToolTip::showText(event->globalPos(),QString("(" + QString::number(x) +
-                                                        "," + QString::number(y) + ")"));
+        }else QToolTip::showText(event->globalPos(),QString("(" + QString::number(x) +
+                                                            "," + QString::number(y) + ")"));
+    }
 }
 
 QPoint MGraphics::transform(QPoint pos)
@@ -220,14 +220,16 @@ void MGraphics::mouseMoveEvent(QMouseEvent *event)
     if (drawingFlag && cursor_mode == 1)//draw
     {
        QLineF line(prevPoint.x(),prevPoint.y(),p.x(),p.y());
-       line_items.push(scene.addLine(line,QPen(QBrush(ColorObj),2,Qt::SolidLine,Qt::RoundCap)));
+       line_items.push(scene.addLine(line,QPen(QBrush(ColorObj),
+                       2*static_cast<qreal>(thickness_pen),Qt::SolidLine,Qt::RoundCap)));
        lines.push(line);
        prevPoint = p;
     }
     if (drawingFlag && cursor_mode == 2)//erase
     {
         QLineF line(prevPoint.x(),prevPoint.y(),p.x(),p.y());
-        line_items.push(scene.addLine(line,QPen(QBrush(QColor(Qt::white)),2,Qt::SolidLine,Qt::RoundCap)));
+        line_items.push(scene.addLine(line,
+         QPen(QBrush(QColor(Qt::white)),2*static_cast<qreal>(thickness_pen),Qt::SolidLine,Qt::RoundCap)));
         lines.push(line);
         prevPoint = p;
     }
@@ -280,7 +282,7 @@ QVector<QPoint> get_prime(int R)
    return res;
 }
 
-void drawLineOnQImage(QImage& img,QPointF p1,QPointF p2, const uint color, int thickness = 10)
+void drawLineOnQImage(QImage& img,QPointF p1,QPointF p2, const uint color, int thickness = 2)
 {
     QVector2D n(p2 - p1);
     int len = static_cast<int> (n.length());
@@ -352,7 +354,7 @@ QPoint MGraphics::drawCurve_andGetCenter(QImage& img)
     {
         //reWrite bin image
         drawLineOnQImage(img,lines.top().p1(),lines.top().p2(),
-                         cursor_mode == 1 ? BIN_BLACK : BIN_WHITE);
+                         cursor_mode == 1 ? BIN_BLACK : BIN_WHITE,thickness_pen);
         avgX += lines.top().p1().x();
         avgY += lines.top().p1().y();
         //remove temp lines from scene
@@ -464,6 +466,26 @@ void MGraphics::RandomColorize()
             (QPixmap::fromImage(std::move(mask)));
     scene.addItem(randItem.get());
     update();
+}
+
+int wheel = 0;
+
+void MGraphics::wheelEvent(QWheelEvent *event)
+{
+    if (pm.isNull() || scene.items().empty())
+        return;
+    QPoint numDegrees = event->angleDelta() / 8;
+    if (numDegrees.y() > 0)
+    {
+        this->scale(1.05,1.05);
+      //  QToolTip::showText(event->globalPos(),"Current thickness = " +
+     //                       QString::number(++wheel) + QString("px"),this);
+    }else
+    {
+        this->scale(1/1.05,1/1.05);
+       // QToolTip::showText(event->globalPos(),"Current thickness = " +
+        //                    QString::number(--wheel) + QString("px"),this);
+    }
 }
 
 

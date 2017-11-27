@@ -43,11 +43,15 @@
     <addaction name="separator"/>
     <addaction name="actionColor_of_objects"/>
     <addaction name="actionColorize_all"/>
+    <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuAutor">
     <property name="title">
-     <string>Autor</string>
+     <string>HELP</string>
     </property>
+    <addaction name="actionHotKeys"/>
+    <addaction name="actionFAQ"/>
+    <addaction name="actionabout"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuSelect_objects"/>
@@ -55,16 +59,18 @@
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
-    <enum>LeftToolBarArea</enum>
+    <enum>TopToolBarArea</enum>
    </attribute>
    <attribute name="toolBarBreak">
-    <bool>false</bool>
+    <bool>true</bool>
    </attribute>
    <addaction name="separator"/>
    <addaction name="action1"/>
    <addaction name="action2"/>
+   <addaction name="separator"/>
    <addaction name="action3"/>
    <addaction name="action4"/>
+   <addaction name="separator"/>
    <addaction name="action5"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -159,6 +165,26 @@
   <action name="actionColorize_all">
    <property name="text">
     <string>Colorize all </string>
+   </property>
+  </action>
+  <action name="actionSet_thickness_of_pen_erase">
+   <property name="text">
+    <string>Set thickness of pen/erase</string>
+   </property>
+  </action>
+  <action name="actionHotKeys">
+   <property name="text">
+    <string>HotKeys...</string>
+   </property>
+  </action>
+  <action name="actionFAQ">
+   <property name="text">
+    <string>FAQ</string>
+   </property>
+  </action>
+  <action name="actionabout">
+   <property name="text">
+    <string>about</string>
    </property>
   </action>
  </widget>

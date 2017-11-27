@@ -35,6 +35,7 @@ protected:
   void mouseReleaseEvent(QMouseEvent *event)override;
   void drawBackground(QPainter *painter, const QRectF &rect)override;
   void keyPressEvent(QKeyEvent *event)override;
+  void wheelEvent(QWheelEvent *event)override;
 
 public slots:
 
@@ -53,6 +54,7 @@ private:
   bool dataIsReady();
   QPoint transform(QPoint);
   QPoint drawCurve_andGetCenter(QImage& img); //return centerMass of curve
+  int thickness_pen;
   char cursor_mode; //0 - view(nothing), 1 - draw, 2 - erase
   bool drawingFlag;
   void ShowObjectUnderCursor(QMouseEvent*);
