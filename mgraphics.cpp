@@ -177,10 +177,7 @@ QStack<QGraphicsLineItem*> line_items;
 
 inline bool MGraphics::dataIsReady()
 {
-   if (!data_01.empty() && !data_obj.empty() && data_01.size() == pm.height())
-       return true;
-   else
-       return false;
+   return !data_01.empty() && !data_obj.empty() && data_01.size() == pm.height();
 }
 
 void MGraphics::ShowObjectUnderCursor(QMouseEvent *event)
@@ -244,10 +241,10 @@ bool MGraphics::decide_to_draw(QPoint p)
         res = data_01[p.y()][p.x()] > 0 ? true : false;
         break;
     case 2:
-        res = data_01[p.y()][p.x()] > 0 ? false : true;
+        res = true; //data_01[p.y()][p.x()] > 0 ? false : true;
         break;
     default:
-        drawingFlag = false;
+        res = false;
         break;
     }
     return res;
@@ -269,22 +266,34 @@ void MGraphics::mousePressEvent(QMouseEvent *event)
     }
 }
 
-void drawLineOnQImage(QImage& img,QPointF p1,QPointF p2, const uint color)
+QVector<QPoint> get_prime(int R)
+{
+   QVector<QPoint> res;
+   for (int y = -R; y < R; ++y)
+       for (int x = -R; x < R; ++x)
+       {
+           if (std::pow(x,2) + std::pow(y,2) <= std::pow(R,2))
+           {
+               res.push_back(QPoint(x,y));
+           }
+       }
+   return res;
+}
+
+void drawLineOnQImage(QImage& img,QPointF p1,QPointF p2, const uint color, int thickness = 10)
 {
     QVector2D n(p2 - p1);
     int len = static_cast<int> (n.length());
     n.normalize();
     QVector2D v(p1);
+    auto prime = get_prime(thickness);
     while (len--)
     {
         v += n;
-        int x = v.toPoint().x();
-        int y = v.toPoint().y();
-        img.setPixel(x,y,color);
-        img.setPixel(x+1,y, color);
-        img.setPixel(x-1,y, color);
-        img.setPixel(x,y+1, color);
-        img.setPixel(x,y-1, color);
+        for (const QPoint& p : prime)
+        {
+            img.setPixel(p + v.toPoint(),color);
+        }
     }
 }
 
@@ -381,9 +390,6 @@ void MGraphics::mouseReleaseEvent(QMouseEvent *event)
         }
 
         return;
-    }else if(cursor_mode == 2)
-    {
-
     }
 //----------------------------------------------------------------------------------------------------------------------
     QImage red(b_img);
