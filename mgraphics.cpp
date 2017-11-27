@@ -145,8 +145,7 @@ void MGraphics::Slider_Change(int value)//threshold - FINAL
       for(int j = 0;j < h; ++j)
       {
          QRgb _P = source_img.pixel(i,j);
-         int bright_x3 = qRed(_P) + qGreen(_P) + qBlue(_P);
-         if (bright_x3 >= value * 3)
+         if (qRed(_P) + qGreen(_P) + qBlue(_P) >= value * 3)
           {
               source_img.setPixel(i,j,BIN_WHITE);
           }else{
@@ -188,7 +187,7 @@ void MGraphics::mouseMoveEvent(QMouseEvent *event)
 //highlight an object----------------------------------------------------------------------------------------------------
     QToolTip::showText(event->globalPos(),QString("(" + QString::number((int) l.x()) +
                                                   "," + QString::number((int) l.y()) + ")"));
-    if (!(data_01.empty()) && (data_01.size() == pm.height()))
+    if (!(data_01.empty()) && (data_01.size() == pm.height()) && cursor_mode != 2)
     {
         size_t id = data_01[y][x];
         if (id){
@@ -253,7 +252,7 @@ void MGraphics::mousePressEvent(QMouseEvent *event)
     }
 }
 
-void drawLineOnQImage(QImage& img,QPointF p1,QPointF p2)
+void drawLineOnQImage(QImage& img,QPointF p1,QPointF p2, const uint color)
 {
     QVector2D n(p2 - p1);
    // int len = (int) n.length();
@@ -267,11 +266,11 @@ void drawLineOnQImage(QImage& img,QPointF p1,QPointF p2)
         v1 += n;
         int x = v1.toPoint().x();
         int y = v1.toPoint().y();
-        img.setPixel(x,y,BIN_BLACK);
-        img.setPixel(x+1,y, BIN_BLACK);
-        img.setPixel(x-1,y, BIN_BLACK);
-        img.setPixel(x,y+1, BIN_BLACK);
-        img.setPixel(x,y-1, BIN_BLACK);
+        img.setPixel(x,y,color);
+        img.setPixel(x+1,y, color);
+        img.setPixel(x-1,y, color);
+        img.setPixel(x,y+1, color);
+        img.setPixel(x,y-1, color);
     }
 }
 
@@ -318,7 +317,7 @@ void fill_area(QImage& img, QPoint Start_point)
 
 void fill_erase_area(QImage& img, QPoint begin, QPoint end, QPoint Start_point)
 {
-    drawLineOnQImage(img,begin,end);
+    drawLineOnQImage(img,begin,end,1);
     QStack<QPoint> depth;
     depth.push(Start_point);
     const int w = img.width();
@@ -396,7 +395,8 @@ void MGraphics::mouseReleaseEvent(QMouseEvent *event)
     while (!line_items.empty())//size line_items == size lines
     {
         //reWrite bin image
-        drawLineOnQImage(red,lines.top().p1(),lines.top().p2());
+        drawLineOnQImage(red,lines.top().p1(),lines.top().p2(),
+                         cursor_mode == 1 ? BIN_BLACK : BIN_WHITE);
         avgX += lines.top().p1().x();
         avgY += lines.top().p1().y();
         //remove temp lines from scene
@@ -411,9 +411,6 @@ void MGraphics::mouseReleaseEvent(QMouseEvent *event)
 
     if (cursor_mode == 1){
     fill_area(red,getStartPoint(red,m));
-    }
-    if (cursor_mode == 2){
-    //fill_erase_area(red,StartPoint,EndPoint,getStartPoint(red,m));
     }
 
     b_img = red;
