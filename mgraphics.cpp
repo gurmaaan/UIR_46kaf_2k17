@@ -488,6 +488,11 @@ void MGraphics::wheelEvent(QWheelEvent *event)
     }
 }
 
+void MGraphics::setThickness(int number)
+{
+   thickness_pen = number;
+}
+
 
 
 

@@ -26,6 +26,8 @@ MainWindow::MainWindow(QWidget *parent) :
             View,&MGraphics::ObjectsColorChange);
     connect(this,&MainWindow::send_colorize_obj,
             View,&MGraphics::RandomColorize);
+    connect(this,&MainWindow::send_thickness,
+            View,&MGraphics::setThickness);
 }
 
 MainWindow::~MainWindow()
@@ -36,9 +38,9 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_actionLoad_file_triggered()//main load
 {
-    QString file_name = QFileDialog::getOpenFileName(this, "Open Dialog", "", "*.jpg *.jpeg *.bmp *.png");
-    qDebug()<<file_name;
-   // QString file_name("C:/Users/relaxes/Documents/46_KAF/primery_izobrazheniy_dlya_UIR/костный мозг  F0000055.bmp");
+    //QString file_name = QFileDialog::getOpenFileName(this, "Open Dialog", "", "*.jpg *.jpeg *.bmp *.png");
+    //qDebug()<<file_name;
+    QString file_name("C:/Users/relaxes/Documents/46_KAF/primery_izobrazheniy_dlya_UIR/костный мозг  F0000055.bmp");
     emit send_filePath(file_name);
 }
 
@@ -109,4 +111,43 @@ void MainWindow::on_actionColor_of_objects_triggered()
 void MainWindow::on_actionColorize_all_triggered()
 {
     emit send_colorize_obj();
+}
+
+bool txtIsValid(const QString& str)//123 or 123px only
+{//qwe123px
+    QString s = str;
+    if (s.endsWith(QString("px")))
+        s.resize(s.size() - 2);
+    for (int i = 0; i < s.size(); ++i)
+    {
+        if (!s[i].isDigit()) return false;
+    }
+    return true;
+}
+
+QString thickness_default = "2px";
+void MainWindow::on_lineEdit_selectionChanged()
+{
+    ui->lineEdit->setText(QString());
+}
+
+void MainWindow::on_lineEdit_editingFinished()
+{
+    QString txt = ui->lineEdit->text();
+    if (txtIsValid(txt))
+    {
+        if (!txt.endsWith(QString("px")))
+            txt += QString("px");
+    }else{
+        txt = thickness_default;
+    }
+    ui->lineEdit->setText(txt);
+    txt.resize(txt.size() - 2);
+    emit send_thickness(txt.toInt());
+}
+
+void MainWindow::on_horizontalSlider_valueChanged(int value)
+{
+    ui->lineEdit->setText(QString::number(value) + QString("px"));
+    emit send_thickness(value);
 }

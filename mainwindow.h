@@ -30,6 +30,8 @@ signals:
 
     void send_colorize_obj();
 
+    void send_thickness(int);
+
 private slots:
     void on_actionLoad_file_triggered();
 
@@ -46,6 +48,12 @@ private slots:
     void on_actionColor_of_objects_triggered();
 
     void on_actionColorize_all_triggered();
+
+    void on_lineEdit_selectionChanged();
+
+    void on_lineEdit_editingFinished();
+
+    void on_horizontalSlider_valueChanged(int value);
 
 private:
     Ui::MainWindow *ui;

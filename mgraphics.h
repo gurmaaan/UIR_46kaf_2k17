@@ -43,6 +43,7 @@ public slots:
   void setCursor_mode(char);
   void ObjectsColorChange(QColor);
   void RandomColorize();
+  void setThickness(int);
 
 private slots:
 
