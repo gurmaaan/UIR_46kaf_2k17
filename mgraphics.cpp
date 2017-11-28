@@ -282,6 +282,29 @@ QVector<QPoint> get_prime(int R)
    return res;
 }
 
+class SecureDrawing
+{
+    int w;
+    int h;
+    QPoint pt;
+    uint clr;
+    QImage& ref;
+    bool Valid(QPoint point)
+    {
+        return point.x() >= 0 && point.y() >= 0 &&
+               point.x() < w && point.y() < h;
+    }
+public:
+    explicit SecureDrawing(QImage& image, QPoint draw, uint color):
+       w(image.width()), h(image.height()),pt(draw),clr(color), ref(image){}
+    SecureDrawing() = default;
+    ~SecureDrawing()
+    {
+        if (Valid(pt))
+          ref.setPixel(pt,clr);
+    }
+};
+
 void drawLineOnQImage(QImage& img,QPointF p1,QPointF p2, const uint color, int thickness = 2)
 {
     QVector2D n(p2 - p1);
@@ -294,7 +317,8 @@ void drawLineOnQImage(QImage& img,QPointF p1,QPointF p2, const uint color, int t
         v += n;
         for (const QPoint& p : prime)
         {
-            img.setPixel(p + v.toPoint(),color);
+           SecureDrawing pixel
+                   (img,p + v.toPoint(),color);
         }
     }
 }
